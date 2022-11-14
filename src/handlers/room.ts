@@ -1,10 +1,16 @@
 import { createRoom, getRoom } from "@/services/rooms";
-import { CreateRoomDto, JoinRoomDto } from "@/dtos/client-to-server-events";
+import {
+  ChangeRoomSettingsDto,
+  CreateRoomDto,
+  JoinRoomDto,
+} from "@/dtos/client-to-server-events";
 import { RoomJoinedDto } from "@/dtos/server-to-client-events";
 import { RoomDto } from "@/dtos/room";
 import { SongQuizException } from "@/exceptions";
 import { SongQuizExceptionCode } from "@/enums/exceptions";
 import { HandlerDefinition, HandlerThis } from "@/typings/handlers";
+import { getRoomFromSocket } from "@/helpers/socket";
+import { isLeader } from "@/middleware/room";
 
 async function onCreateRoom(
   this: HandlerThis,
@@ -32,6 +38,14 @@ async function onJoinRoom(
   return new RoomJoinedDto(RoomDto.fromRoom(room), await player.token);
 }
 
+function onChangeRoomSettings(
+  this: HandlerThis,
+  data: ChangeRoomSettingsDto
+): void {
+  const room = getRoomFromSocket(this.socket);
+  room.changeSettings(data);
+}
+
 export const roomHandlers: HandlerDefinition[] = [
   {
     event: "createRoom",
@@ -42,5 +56,11 @@ export const roomHandlers: HandlerDefinition[] = [
     event: "joinRoom",
     handler: onJoinRoom,
     constructors: [JoinRoomDto],
+  },
+  {
+    event: "changeRoomSettings",
+    handler: onChangeRoomSettings,
+    constructors: [ChangeRoomSettingsDto],
+    middleware: [isLeader],
   },
 ];

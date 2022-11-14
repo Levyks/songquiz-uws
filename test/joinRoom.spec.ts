@@ -1,7 +1,6 @@
 import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { registerSocketClient, emit } from "./helpers/socket";
-import { createRoom } from "./helpers/room";
+import { newSocketClient, emit } from "./helpers/socket";
 import { generateRoomCode } from "@/services/rooms";
 import { SongQuizExceptionCode } from "@/enums/exceptions";
 import { SocketClientType } from "./typings/socket-io";
@@ -11,6 +10,10 @@ import {
 } from "./helpers/flow";
 import { Player } from "@/models/player";
 import { SongQuizException } from "@/exceptions";
+import {
+  createPlayerAndCreateRoom,
+  createPlayerAndJoinRoom,
+} from "./helpers/room";
 
 chai.use(chaiAsPromised);
 
@@ -21,12 +24,10 @@ describe("Join Room", function () {
   disconnectAllSocketsAfterEach(sockets);
 
   it("should join room", async () => {
-    const leaderNickname = "leader";
-    const leaderSocket = registerSocketClient(sockets);
-    const roomCode = await createRoom(leaderSocket, leaderNickname);
+    const { roomCode } = await createPlayerAndCreateRoom(sockets);
 
     const playerNickname = "player";
-    const playerSocket = registerSocketClient(sockets);
+    const playerSocket = newSocketClient(sockets);
     const response = await emit(playerSocket, "joinRoom", {
       roomCode,
       nickname: playerNickname,
@@ -45,12 +46,7 @@ describe("Join Room", function () {
     const roomCode = generateRoomCode();
     if (!roomCode) throw new Error("Couldn't generate room code");
 
-    const playerNickname = "player";
-    const playerSocket = registerSocketClient(sockets);
-    const joinPromise = emit(playerSocket, "joinRoom", {
-      roomCode,
-      nickname: playerNickname,
-    });
+    const joinPromise = createPlayerAndJoinRoom(sockets, roomCode);
 
     expect(joinPromise).to.be.rejectedWith(
       new SongQuizException(SongQuizExceptionCode.RoomDoesNotExist)
@@ -58,20 +54,19 @@ describe("Join Room", function () {
   });
 
   it("should be able to reconnect with a token", async () => {
-    const leaderNickname = "leader";
-    const leaderSocket = registerSocketClient(sockets);
-    const roomCode = await createRoom(leaderSocket, leaderNickname);
+    const { roomCode } = await createPlayerAndCreateRoom(sockets);
 
     const playerNickname = "player";
-    const playerSocket = registerSocketClient(sockets);
-    const token = await emit(playerSocket, "joinRoom", {
+
+    const { socket: playerSocket, token } = await createPlayerAndJoinRoom(
+      sockets,
       roomCode,
-      nickname: playerNickname,
-    }).then((r) => r.token);
+      playerNickname
+    );
 
     playerSocket.disconnect();
 
-    const playerSocket2 = registerSocketClient(sockets);
+    const playerSocket2 = newSocketClient(sockets);
     const response = await emit(playerSocket2, "joinRoom", {
       roomCode,
       nickname: playerNickname,
@@ -84,16 +79,14 @@ describe("Join Room", function () {
   });
 
   it("shouldn't be able to reconnect with an incorrect token", async () => {
-    const leaderNickname = "leader";
-    const leaderSocket = registerSocketClient(sockets);
-    const roomCode = await createRoom(leaderSocket, leaderNickname);
+    const { roomCode } = await createPlayerAndCreateRoom(sockets);
 
     const playerNickname = "player";
-    const playerSocket = registerSocketClient(sockets);
-    const token = await emit(playerSocket, "joinRoom", {
+    const { socket: playerSocket, token } = await createPlayerAndJoinRoom(
+      sockets,
       roomCode,
-      nickname: playerNickname,
-    }).then((r) => r.token);
+      playerNickname
+    );
 
     playerSocket.disconnect();
 
@@ -102,7 +95,7 @@ describe("Join Room", function () {
       incorrectToken = await Player.generateToken();
     }
 
-    const playerSocket2 = registerSocketClient(sockets);
+    const playerSocket2 = newSocketClient(sockets);
     const joinPromise = emit(playerSocket2, "joinRoom", {
       roomCode,
       nickname: playerNickname,

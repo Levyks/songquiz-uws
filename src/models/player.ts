@@ -35,6 +35,10 @@ export class Player {
     return !!this.socket?.connected;
   }
 
+  get isLeader() {
+    return this.room.leader === this;
+  }
+
   constructor(nickname: string, room: Room, socket: SocketType) {
     this.nickname = nickname;
     this.room = room;

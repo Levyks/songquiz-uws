@@ -4,8 +4,12 @@ export const config = {
   minNicknameLength: 3,
   maxNicknameLength: 32,
   tokenSizeInBytes: 32,
+  minRoundsPerGame: 1,
+  maxRoundsPerGame: 20,
+  minSecondsPerRound: 5,
+  maxSecondsPerRound: 30,
+  maxNumberOfRoomCodeGenerationTries: 1000000000,
   get tokenStringLength() {
     return Math.ceil((this.tokenSizeInBytes / 6) * 8);
   },
-  maxNumberOfRoomCodeGenerationTries: 1000000000,
 };

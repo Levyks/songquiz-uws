@@ -12,7 +12,7 @@ import { SongQuizException } from "@/exceptions";
 import signale from "signale";
 import { SongQuizExceptionCode } from "@/enums/exceptions";
 import { ArgValidationError } from "@/typings/validation";
-import { HandlerThis } from "@/typings/handlers";
+import { HandlerThis, Middleware } from "@/typings/handlers";
 import { registerMiscHandlers } from "@/handlers/misc";
 
 function validateArgsCount(args: any[], count: number) {
@@ -41,6 +41,13 @@ async function validateArgs(args: any[], constructors: Constructor<any>[]) {
     );
 }
 
+async function runMiddleware(middleware: Middleware[], socket: SocketType) {
+  for (const middlewareFn of middleware) {
+    const result = middlewareFn(socket);
+    if (result instanceof Promise) await result;
+  }
+}
+
 export function registerHandler<
   Ev extends keyof ClientToServerEvents,
   F extends ClientToServerEvents[Ev]
@@ -49,7 +56,8 @@ export function registerHandler<
   socket: SocketType,
   event: Ev,
   handler: F | Async<F>,
-  constructors: Constructors<Parameters<F>>
+  constructors: Constructors<Parameters<F>>,
+  middleware: Middleware[]
 ) {
   const listener = async (...args) => {
     signale.info(`Received ${event} event`);
@@ -67,6 +75,8 @@ export function registerHandler<
       }) as Parameters<F>;
 
       await validateArgs(argsTransformed, constructors);
+
+      await runMiddleware(middleware, socket);
 
       const handlerThis: HandlerThis = { io, socket };
       const result = handler.call(handlerThis, ...argsTransformed) as
@@ -95,7 +105,8 @@ export function registerHandlers(io: ServerType, socket: SocketType) {
       socket,
       handler.event,
       handler.handler,
-      handler.constructors
+      handler.constructors,
+      handler.middleware ?? []
     );
   }
 }

@@ -4,6 +4,12 @@ export enum RoomStatus {
   Results = "Results",
 }
 
+export enum RoomRoundsType {
+  Both = "Both",
+  Song = "Song",
+  Artist = "Artist",
+}
+
 export enum RoundStatus {
   Playing = "Playing",
   Results = "Results",

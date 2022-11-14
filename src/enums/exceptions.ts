@@ -6,4 +6,6 @@ export enum SongQuizExceptionCode {
   CouldNotCreateRoom = "CouldNotCreateRoom",
   RoomDoesNotExist = "RoomDoesNotExist",
   NicknameAlreadyTaken = "NicknameAlreadyTaken",
+  LeaderOnlyAction = "LeaderOnlyAction",
+  InRoomOnlyAction = "InRoomOnlyAction",
 }

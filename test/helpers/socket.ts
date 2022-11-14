@@ -1,15 +1,14 @@
 import {
+  AckCallback,
   ClientToServerEvents,
-  ClientToServerEventsUsable,
   ServerToClientEvents,
   ServerToClientEventsUsable,
 } from "@/typings/socket-io";
-import { io, Socket } from "socket.io-client";
-import { SongQuizException } from "@/exceptions";
+import { io } from "socket.io-client";
 import { SocketClientType } from "../typings/socket-io";
 import { config } from "@/config";
 
-export function registerSocketClient(
+export function newSocketClient(
   sockets: SocketClientType[],
   port = config.port
 ): SocketClientType {
@@ -18,46 +17,43 @@ export function registerSocketClient(
   return socket;
 }
 
-// TODO: fix this mess
-export function emit<Ev extends keyof ClientToServerEvents>(
-  socket: Socket<ServerToClientEventsUsable, ClientToServerEventsUsable>,
+export function emit<
+  Ev extends keyof ClientToServerEvents,
+  F extends ClientToServerEvents[Ev]
+>(
+  socket: SocketClientType,
   event: Ev,
-  ...args: Parameters<ClientToServerEvents[Ev]>
-): Promise<ReturnType<ClientToServerEvents[Ev]>> {
+  ...args: Parameters<F>
+): Promise<ReturnType<F>> {
   return new Promise((resolve, reject) => {
-    const argsWithCb = [
-      ...args,
-      (
-        response:
-          | [true, ReturnType<ClientToServerEvents[Ev]>]
-          | [false, SongQuizException]
-      ) => {
-        if (response[0]) resolve(response[1]);
-        else reject(response[1]);
-      },
-    ] as unknown as Parameters<ClientToServerEventsUsable[Ev]>;
-    socket.emit(event, ...argsWithCb);
+    const cb: AckCallback<ReturnType<F>> = ([success, data]) => {
+      if (success) resolve(data);
+      else reject(data);
+    };
+    socket.emit.call(socket, event, ...args, cb);
   });
 }
 
-export function listenTo<Ev extends keyof ServerToClientEventsUsable>(
-  socket: Socket<ServerToClientEventsUsable, ClientToServerEventsUsable>,
-  event: Ev,
-  timeout = 1000
-): Promise<Parameters<ServerToClientEvents[Ev]>> {
+export function listenTo<
+  Ev extends keyof ServerToClientEvents,
+  F extends ServerToClientEvents[Ev]
+>(socket: SocketClientType, event: Ev, timeout = 1000): Promise<Parameters<F>> {
   return new Promise((resolve, reject) => {
-    const off = () => {
+    const listener = (...args: Parameters<ServerToClientEventsUsable[Ev]>) => {
+      resolve(args);
+      clear();
+    };
+
+    socket.on.call(socket, event, listener);
+
+    const timeoutId = setTimeout(() => {
+      reject(new Error(`Timeout of ${timeout}ms exceeded`));
+      clear();
+    }, timeout);
+
+    const clear = () => {
       clearTimeout(timeoutId);
       socket.off(event, listener as any);
     };
-    const listener = (...args: Parameters<ServerToClientEventsUsable[Ev]>) => {
-      resolve(args);
-      off();
-    };
-    socket.on(event, listener as any);
-    const timeoutId = setTimeout(() => {
-      reject(new Error(`Timeout of ${timeout}ms exceeded`));
-      off();
-    }, timeout);
   });
 }

@@ -1,4 +1,4 @@
-import { RoomStatus } from "@/enums/game";
+import { RoomRoundsType, RoomStatus } from "@/enums/game";
 import { Room } from "@/models/room";
 import { PlayerDto } from "@/dtos/player";
 
@@ -7,6 +7,7 @@ export class RoomDto {
   players: PlayerDto[];
   leader: string;
   status: RoomStatus;
+  roundsType: RoomRoundsType;
   numberOfRounds: number;
   secondsPerRound: number;
   playlist: null;
@@ -19,6 +20,7 @@ export class RoomDto {
     );
     dto.leader = room.leader.nickname;
     dto.status = room.status;
+    dto.roundsType = room.roundsType;
     dto.numberOfRounds = room.numberOfRounds;
     dto.secondsPerRound = room.secondsPerRound;
     dto.playlist = null;

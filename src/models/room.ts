@@ -1,10 +1,11 @@
 import { Player } from "@/models/player";
-import { RoomStatus } from "@/enums/game";
+import { RoomRoundsType, RoomStatus } from "@/enums/game";
 import {
   ChannelBroadcaster,
   ServerType,
   SocketType,
 } from "@/typings/socket-io";
+import { ChangeRoomSettingsDto } from "@/dtos/client-to-server-events";
 
 export class Room {
   //region Fields
@@ -14,6 +15,7 @@ export class Room {
   players = new Map<string, Player>();
   leader: Player;
   status = RoomStatus.InLobby;
+  roundsType = RoomRoundsType.Both;
   numberOfRounds = 10;
   secondsPerRound = 15;
   playlist: null;
@@ -89,6 +91,15 @@ export class Room {
 
   public onPlayerDisconnect(player: Player): void {
     this.channelExcept(player).emit("playerDisconnected", player.nickname);
+  }
+  //endregion
+
+  //region Settings
+  public changeSettings(settings: ChangeRoomSettingsDto): void {
+    this.roundsType = settings.roundsType;
+    this.numberOfRounds = settings.numberOfRounds;
+    this.secondsPerRound = settings.secondsPerRound;
+    this.channel.emit("roomSettingsChanged", settings);
   }
   //endregion
 

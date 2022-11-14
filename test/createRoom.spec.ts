@@ -1,14 +1,11 @@
-import chai, { expect } from "chai";
-import spies from "chai-spies";
+import { expect } from "chai";
 import { RoomStatus } from "@/enums/game";
-import { registerSocketClient, emit } from "./helpers/socket";
+import { newSocketClient, emit } from "./helpers/socket";
 import { SocketClientType } from "./typings/socket-io";
 import {
   createServerBeforeAndStopAfter,
   disconnectAllSocketsAfterEach,
 } from "./helpers/flow";
-
-chai.use(spies);
 
 describe("Create Room", function () {
   const sockets: SocketClientType[] = [];
@@ -19,7 +16,7 @@ describe("Create Room", function () {
   it("should create room", async () => {
     const nickname = "levyks";
 
-    const socket = registerSocketClient(sockets);
+    const socket = newSocketClient(sockets);
     const response = await emit(socket, "createRoom", { nickname });
 
     const roomCode = response.room.code;
@@ -40,6 +37,7 @@ describe("Create Room", function () {
         ],
         leader: nickname,
         status: RoomStatus.InLobby,
+        roundsType: "Both",
         numberOfRounds: 10,
         secondsPerRound: 15,
         playlist: null,
