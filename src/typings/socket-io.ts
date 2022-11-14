@@ -2,15 +2,17 @@ import { Server, Socket } from "socket.io";
 import { SongQuizException } from "@/exceptions";
 import { CreateRoomDto, JoinRoomDto } from "@/dtos/client-to-server-events";
 import { RoomJoinedDto } from "@/dtos/server-to-client-events";
+import { Player } from "@/models/player";
 
 export type AckCallback<D> = (
   result: [true, D] | [false, SongQuizException]
 ) => void;
 
 export interface ServerToClientEvents {
-  noArg: () => void;
-  basicEmit: (a: number, b: string, c: Buffer) => void;
-  withAck: (d: string, callback: (e: number) => void) => void;
+  playerJoined: (nickname: string) => void;
+  playerDisconnected: (nickname: string) => void;
+  playerReconnected: (nickname: string) => void;
+  playerLeft: (nickname: string) => void;
 }
 
 export interface ClientToServerEvents {
@@ -19,25 +21,39 @@ export interface ClientToServerEvents {
 }
 
 export interface SocketData {
-  name: string;
-  age: number;
+  player?: Player;
 }
+
+export type ServerToClientEventsUsable = {
+  [key in keyof ServerToClientEvents]: (
+    ...args: [
+      ...Parameters<ServerToClientEvents[key]>,
+      ...(ReturnType<ServerToClientEvents[key]> extends void
+        ? []
+        : [AckCallback<ReturnType<ServerToClientEvents[key]>>])
+    ]
+  ) => void;
+};
 
 export type ClientToServerEventsUsable = {
   [key in keyof ClientToServerEvents]: (
     ...args: [
       ...Parameters<ClientToServerEvents[key]>,
-      AckCallback<ReturnType<ClientToServerEvents[key]>>
+      ...(ReturnType<ClientToServerEvents[key]> extends void
+        ? []
+        : [AckCallback<ReturnType<ClientToServerEvents[key]>>])
     ]
   ) => void;
 };
 
 export type ServerType = Server<
   ClientToServerEventsUsable,
-  ServerToClientEvents,
+  ServerToClientEventsUsable,
   Record<string, never>,
   SocketData
 >;
+
+export type ChannelBroadcaster = ReturnType<ServerType["to"]>;
 
 export type SocketType = Socket<
   ClientToServerEventsUsable,

@@ -1,42 +1,46 @@
-import { registerHandler } from "@/handlers/index";
 import { createRoom, getRoom } from "@/services/rooms";
 import { CreateRoomDto, JoinRoomDto } from "@/dtos/client-to-server-events";
 import { RoomJoinedDto } from "@/dtos/server-to-client-events";
 import { RoomDto } from "@/dtos/room";
-import { PlayerWithTokenDto } from "@/dtos/player";
-import { SocketType } from "@/typings/socket-io";
 import { SongQuizException } from "@/exceptions";
 import { SongQuizExceptionCode } from "@/enums/exceptions";
+import { HandlerDefinition, HandlerThis } from "@/typings/handlers";
 
 async function onCreateRoom(
-  this: SocketType,
+  this: HandlerThis,
   data: CreateRoomDto
 ): Promise<RoomJoinedDto> {
-  const room = createRoom(data.nickname, this);
+  const room = createRoom(this.io, data.nickname, this.socket);
 
-  return new RoomJoinedDto(
-    RoomDto.fromRoom(room),
-    await PlayerWithTokenDto.fromPlayer(room.leader)
-  );
+  return new RoomJoinedDto(RoomDto.fromRoom(room), await room.leader.token);
 }
 
 async function onJoinRoom(
-  this: SocketType,
+  this: HandlerThis,
   data: JoinRoomDto
 ): Promise<RoomJoinedDto> {
   const room = getRoom(data.roomCode);
   if (!room)
     throw new SongQuizException(SongQuizExceptionCode.RoomDoesNotExist);
 
-  const player = await room.joinPlayer(data.nickname, null, this);
-
-  return new RoomJoinedDto(
-    RoomDto.fromRoom(room),
-    await PlayerWithTokenDto.fromPlayer(player)
+  const player = await room.tryJoinPlayer(
+    data.nickname,
+    data.token,
+    this.socket
   );
+
+  return new RoomJoinedDto(RoomDto.fromRoom(room), await player.token);
 }
 
-export function registerHandlers(socket: SocketType) {
-  registerHandler(socket, "createRoom", onCreateRoom, [CreateRoomDto]);
-  registerHandler(socket, "joinRoom", onJoinRoom, [JoinRoomDto]);
-}
+export const roomHandlers: HandlerDefinition[] = [
+  {
+    event: "createRoom",
+    handler: onCreateRoom,
+    constructors: [CreateRoomDto],
+  },
+  {
+    event: "joinRoom",
+    handler: onJoinRoom,
+    constructors: [JoinRoomDto],
+  },
+];

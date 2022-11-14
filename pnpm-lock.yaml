@@ -2,6 +2,7 @@ lockfileVersion: 5.4
 
 specifiers:
   '@types/chai': ^4.3.4
+  '@types/chai-as-promised': ^7.1.5
   '@types/chai-spies': ^1.0.3
   '@types/cookie': ^0.5.1
   '@types/mocha': ^10.0.0
@@ -10,6 +11,7 @@ specifiers:
   '@typescript-eslint/eslint-plugin': ^5.42.1
   '@typescript-eslint/parser': ^5.42.1
   chai: ^4.3.7
+  chai-as-promised: ^7.1.1
   chai-spies: ^1.0.0
   class-transformer: ^0.5.1
   class-validator: ^0.13.2
@@ -37,6 +39,7 @@ dependencies:
 
 devDependencies:
   '@types/chai': 4.3.4
+  '@types/chai-as-promised': 7.1.5
   '@types/chai-spies': 1.0.3
   '@types/cookie': 0.5.1
   '@types/mocha': 10.0.0
@@ -45,6 +48,7 @@ devDependencies:
   '@typescript-eslint/eslint-plugin': 5.42.1_2udltptbznfmezdozpdoa2aemq
   '@typescript-eslint/parser': 5.42.1_rmayb2veg2btbq6mbmnyivgasy
   chai: 4.3.7
+  chai-as-promised: 7.1.1_chai@4.3.7
   chai-spies: 1.0.0_chai@4.3.7
   eslint: 8.27.0
   mocha: 10.1.0
@@ -154,6 +158,12 @@ packages:
 
   /@tsconfig/node16/1.0.3:
     resolution: {integrity: sha512-yOlFc+7UtL/89t2ZhjPvvB/DeAr3r+Dq58IgzsFkOAvVC6NMJXmCGjbptdXdR9qsX7pKcTL+s87FtYREi2dEEQ==}
+    dev: true
+
+  /@types/chai-as-promised/7.1.5:
+    resolution: {integrity: sha512-jStwss93SITGBwt/niYrkf2C+/1KTeZCZl1LaeezTlqppAKeoQC7jxyqYuP72sxBGKCIbw7oHgbYssIRzT5FCQ==}
+    dependencies:
+      '@types/chai': 4.3.4
     dev: true
 
   /@types/chai-spies/1.0.3:
@@ -459,6 +469,15 @@ packages:
   /camelcase/6.3.0:
     resolution: {integrity: sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==}
     engines: {node: '>=10'}
+    dev: true
+
+  /chai-as-promised/7.1.1_chai@4.3.7:
+    resolution: {integrity: sha512-azL6xMoi+uxu6z4rhWQ1jbdUhOMhis2PvscD/xjLqNMkv3BPPp2JyyuTHOrf9BOosGpNQ11v6BKv/g57RXbiaA==}
+    peerDependencies:
+      chai: '>= 2.1.2 < 5'
+    dependencies:
+      chai: 4.3.7
+      check-error: 1.0.2
     dev: true
 
   /chai-spies/1.0.0_chai@4.3.7:

@@ -1,4 +1,5 @@
 export const config = {
+  port: Number(process.env.PORT) || 3000,
   roomCodeLength: 4,
   minNicknameLength: 3,
   maxNicknameLength: 32,

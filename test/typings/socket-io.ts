@@ -1,10 +1,10 @@
 import { Socket } from "socket.io-client";
 import {
   ClientToServerEventsUsable,
-  ServerToClientEvents,
+  ServerToClientEventsUsable,
 } from "@/typings/socket-io";
 
 export type SocketClientType = Socket<
-  ServerToClientEvents,
+  ServerToClientEventsUsable,
   ClientToServerEventsUsable
 >;

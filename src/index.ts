@@ -1,6 +1,6 @@
 // noinspection JSIgnoredPromiseFromCall
 
+import { config } from "@/config";
 import { createServer } from "@/server";
 
-const port = Number(process.env.PORT) || 3000;
-createServer(port);
+createServer(config.port);

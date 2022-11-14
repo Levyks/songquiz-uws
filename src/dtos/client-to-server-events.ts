@@ -1,4 +1,4 @@
-import { Length } from "class-validator";
+import { Length, IsOptional } from "class-validator";
 import { config } from "@/config";
 
 export class CreateRoomDto {
@@ -11,6 +11,7 @@ export class JoinRoomDto {
   nickname: string;
   @Length(config.roomCodeLength)
   roomCode: string;
+  @IsOptional()
   @Length(config.tokenStringLength)
-  token: string;
+  token?: string;
 }

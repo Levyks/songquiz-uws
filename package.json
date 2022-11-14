@@ -5,13 +5,14 @@
   "main": "index.js",
   "scripts": {
     "dev": "ts-node -r tsconfig-paths/register src/index.ts",
-    "test": "mocha --require ts-node/register -r tsconfig-paths/register 'test/**/*.spec.ts'"
+    "test": "mocha -r ts-node/register -r tsconfig-paths/register 'test/**/*.spec.ts'"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@types/chai": "^4.3.4",
+    "@types/chai-as-promised": "^7.1.5",
     "@types/chai-spies": "^1.0.3",
     "@types/cookie": "^0.5.1",
     "@types/mocha": "^10.0.0",
@@ -20,6 +21,7 @@
     "@typescript-eslint/eslint-plugin": "^5.42.1",
     "@typescript-eslint/parser": "^5.42.1",
     "chai": "^4.3.7",
+    "chai-as-promised": "^7.1.1",
     "chai-spies": "^1.0.0",
     "eslint": "^8.27.0",
     "mocha": "^10.1.0",

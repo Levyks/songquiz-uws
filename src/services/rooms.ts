@@ -1,7 +1,7 @@
 import { Room } from "@/models/room";
 import { SongQuizException } from "@/exceptions";
 import { SongQuizExceptionCode } from "@/enums/exceptions";
-import { SocketType } from "@/typings/socket-io";
+import { ServerType, SocketType } from "@/typings/socket-io";
 
 const rooms = new Map<string, Room>();
 
@@ -9,13 +9,17 @@ export function getRoom(code: string) {
   return rooms.get(code);
 }
 
-export function createRoom(leaderNickname: string, socket: SocketType) {
+export function createRoom(
+  io: ServerType,
+  leaderNickname: string,
+  socket: SocketType
+) {
   const code = generateRoomCode();
 
   if (!code)
     throw new SongQuizException(SongQuizExceptionCode.CouldNotCreateRoom);
 
-  const room = new Room(code, leaderNickname, socket);
+  const room = new Room(io, code, leaderNickname, socket);
   rooms.set(code, room);
 
   return room;

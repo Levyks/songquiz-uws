@@ -1,16 +1,19 @@
 import { validate } from "class-validator";
 import { plainToInstance } from "class-transformer";
-import { registerHandlers as registerRoomHandlers } from "@/handlers/room";
+import { roomHandlers } from "@/handlers/room";
 import { Constructors, Async, Constructor } from "@/typings/misc";
 import {
   AckCallback,
   ClientToServerEvents,
+  ServerType,
   SocketType,
 } from "@/typings/socket-io";
 import { SongQuizException } from "@/exceptions";
 import signale from "signale";
 import { SongQuizExceptionCode } from "@/enums/exceptions";
 import { ArgValidationError } from "@/typings/validation";
+import { HandlerThis } from "@/typings/handlers";
+import { registerMiscHandlers } from "@/handlers/misc";
 
 function validateArgsCount(args: any[], count: number) {
   if (args.length !== count)
@@ -42,6 +45,7 @@ export function registerHandler<
   Ev extends keyof ClientToServerEvents,
   F extends ClientToServerEvents[Ev]
 >(
+  io: ServerType,
   socket: SocketType,
   event: Ev,
   handler: F | Async<F>,
@@ -64,7 +68,8 @@ export function registerHandler<
 
       await validateArgs(argsTransformed, constructors);
 
-      const result = handler.call(socket, ...argsTransformed) as
+      const handlerThis: HandlerThis = { io, socket };
+      const result = handler.call(handlerThis, ...argsTransformed) as
         | ReturnType<F>
         | Promise<ReturnType<F>>;
 
@@ -80,6 +85,17 @@ export function registerHandler<
   socket.on(event, listener as any);
 }
 
-export function registerHandlers(socket: SocketType) {
-  registerRoomHandlers(socket);
+export function registerHandlers(io: ServerType, socket: SocketType) {
+  const handlers = [...roomHandlers];
+
+  registerMiscHandlers(socket);
+  for (const handler of handlers) {
+    registerHandler(
+      io,
+      socket,
+      handler.event,
+      handler.handler,
+      handler.constructors
+    );
+  }
 }

@@ -4,8 +4,11 @@ import { Server } from "socket.io";
 import { ServerType } from "@/typings/socket-io";
 import { registerHandlers } from "@/handlers";
 import signale from "signale";
+import { config } from "@/config";
 
-export function createServer(port = 3000): Promise<[TemplatedApp, () => void]> {
+export function createServer(
+  port = config.port
+): Promise<[TemplatedApp, () => void]> {
   return new Promise((resolve, reject) => {
     const app = App();
 
@@ -15,7 +18,7 @@ export function createServer(port = 3000): Promise<[TemplatedApp, () => void]> {
       },
     });
 
-    io.on("connection", registerHandlers);
+    io.on("connection", (socket) => registerHandlers(io, socket));
 
     io.attachApp(app);
 

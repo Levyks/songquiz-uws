@@ -14,7 +14,9 @@ export class RoomDto {
   static fromRoom(room: Room) {
     const dto = new RoomDto();
     dto.code = room.code;
-    dto.players = room.players.map(PlayerDto.fromPlayer);
+    dto.players = room.playersList.map((player) =>
+      PlayerDto.fromPlayer(player)
+    );
     dto.leader = room.leader.nickname;
     dto.status = room.status;
     dto.numberOfRounds = room.numberOfRounds;

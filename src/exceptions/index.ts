@@ -5,13 +5,13 @@ export class SongQuizException extends Error {
     return new SongQuizException(SongQuizExceptionCode.UnknownError);
   }
 
-  constructor(code: SongQuizExceptionCode, public data?: any) {
-    super(code.toString());
+  constructor(public code: SongQuizExceptionCode, public data?: any) {
+    super(`SongQuizException: ${code.toString()}`);
   }
 
   toJSON() {
     return {
-      code: this.message,
+      code: this.code,
       data: this.data,
     };
   }
