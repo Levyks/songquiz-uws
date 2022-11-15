@@ -1,6 +1,7 @@
 import { Server, Socket } from "socket.io";
 import { SongQuizException } from "@/exceptions";
 import {
+  ChangeRoomPlaylistFromSpotifyDto,
   ChangeRoomSettingsDto,
   CreateRoomDto,
   JoinRoomDto,
@@ -10,6 +11,7 @@ import {
   RoomSettingsChangedDto,
 } from "@/dtos/server-to-client-events";
 import { Player } from "@/models/player";
+import { PlaylistDTO } from "@/dtos/playlist";
 
 export type AckCallback<D> = (
   result: [true, D] | [false, SongQuizException]
@@ -21,12 +23,16 @@ export interface ServerToClientEvents {
   playerReconnected: (nickname: string) => void;
   playerLeft: (nickname: string) => void;
   roomSettingsChanged: (settings: RoomSettingsChangedDto) => void;
+  roomPlaylistChanged: (playlist: PlaylistDTO) => void;
 }
 
 export interface ClientToServerEvents {
   createRoom: (data: CreateRoomDto) => RoomJoinedDto;
   joinRoom: (data: JoinRoomDto) => RoomJoinedDto;
   changeRoomSettings: (data: ChangeRoomSettingsDto) => void;
+  changeRoomPlaylistFromSpotify: (
+    data: ChangeRoomPlaylistFromSpotifyDto
+  ) => void;
 }
 
 export interface SocketData {

@@ -7,7 +7,7 @@ import {
   disconnectAllSocketsAfterEach,
 } from "./helpers/flow";
 
-describe("Create Room", function () {
+describe("Create Room", () => {
   const sockets: SocketClientType[] = [];
 
   createServerBeforeAndStopAfter();

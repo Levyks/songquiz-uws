@@ -31,3 +31,8 @@ export class ChangeRoomSettingsDto {
   @Max(config.maxSecondsPerRound)
   secondsPerRound: number;
 }
+
+export class ChangeRoomPlaylistFromSpotifyDto {
+  @Length(22)
+  playlistId: string;
+}

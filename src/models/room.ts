@@ -6,6 +6,8 @@ import {
   SocketType,
 } from "@/typings/socket-io";
 import { ChangeRoomSettingsDto } from "@/dtos/client-to-server-events";
+import { Playlist } from "@/models/playlist";
+import { PlaylistDTO } from "@/dtos/playlist";
 
 export class Room {
   //region Fields
@@ -18,7 +20,7 @@ export class Room {
   roundsType = RoomRoundsType.Both;
   numberOfRounds = 10;
   secondsPerRound = 15;
-  playlist: null;
+  playlist: Playlist | null = null;
   //endregion
 
   //region Constructor
@@ -102,6 +104,14 @@ export class Room {
     this.channel.emit("roomSettingsChanged", settings);
   }
   //endregion
+
+  public changePlaylist(playlist: Playlist): void {
+    this.playlist = playlist;
+    this.channel.emit(
+      "roomPlaylistChanged",
+      PlaylistDTO.fromPlaylist(playlist)
+    );
+  }
 
   //region Channel
   get channelName(): string {

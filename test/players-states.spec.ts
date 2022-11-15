@@ -10,7 +10,7 @@ import {
   disconnectAllSocketsAfterEach,
 } from "./helpers/flow";
 
-describe("Players states", function () {
+describe("Players states", () => {
   const sockets: SocketClientType[] = [];
 
   createServerBeforeAndStopAfter();

@@ -17,7 +17,7 @@ import {
 
 chai.use(chaiAsPromised);
 
-describe("Join Room", function () {
+describe("Join Room", () => {
   const sockets: SocketClientType[] = [];
 
   createServerBeforeAndStopAfter();
