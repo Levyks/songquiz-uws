@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError, AxiosHeaders } from "axios";
 import qs from "qs";
 import {
   SpotifyPlaylistInfoWithTracksFirstPage,
@@ -70,18 +70,25 @@ const api = axios.create({
   baseURL: "https://api.spotify.com/v1/",
 });
 
-api.interceptors.request.use(
-  async (config) => {
-    const tokenToBeUsed = token ?? (await fetchAndSetTokenNoOverlap());
-    config.headers = config.headers ?? {};
-    config.headers["Authorization"] = `Bearer ${tokenToBeUsed}`;
-    return config;
-  },
-  async (error) => {
-    if (error.response?.status === 401) {
+api.interceptors.request.use(async (config) => {
+  const tokenToBeUsed = token ?? (await fetchAndSetTokenNoOverlap());
+  config.headers = config.headers ?? {};
+  config.headers["Authorization"] = `Bearer ${tokenToBeUsed}`;
+  return config;
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    if (error.response?.status === 401 && error.config) {
       token = null;
-      const tokenToBeUsed = await fetchAndSetTokenNoOverlap();
-      error.config.headers["Authorization"] = `Bearer ${tokenToBeUsed}`;
+      const newToken = await fetchAndSetTokenNoOverlap();
+      // Axios is being weird here, headers.set is not working properly
+      const headers = error.config.headers as unknown as AxiosHeaders;
+      error.config.headers = {
+        ...headers.toJSON(),
+        Authorization: `Bearer ${newToken}`,
+      };
       /*
        * Using the default axios instance here to avoid an infinite loop
        * of interceptors in case something goes wrong with the auth.

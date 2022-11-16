@@ -7,7 +7,11 @@ import {
 } from "@/typings/socket-io";
 import { ChangeRoomSettingsDto } from "@/dtos/client-to-server-events";
 import { Playlist } from "@/models/playlist";
-import { PlaylistDTO } from "@/dtos/playlist";
+import { PlaylistDto } from "@/dtos/playlist";
+import { Round } from "@/models/round";
+import { config } from "@/config";
+import { SongQuizException } from "@/exceptions";
+import { SongQuizExceptionCode } from "@/enums/exceptions";
 
 export class Room {
   //region Fields
@@ -18,9 +22,10 @@ export class Room {
   leader: Player;
   status = RoomStatus.InLobby;
   roundsType = RoomRoundsType.Both;
-  numberOfRounds = 10;
-  secondsPerRound = 15;
+  numberOfRounds = config.defaultRoundsPerGame;
+  secondsPerRound = config.defaultSecondsPerRound;
   playlist: Playlist | null = null;
+  currentRound: Round | null = null;
   //endregion
 
   //region Constructor
@@ -71,15 +76,11 @@ export class Room {
     return this.joinPlayer(player);
   }
 
-  private joinSocket(socket: SocketType): void {
-    socket.join(this.channelName);
-  }
-
   private joinPlayer(player: Player): Player {
     if (!player.socket)
       throw new Error("Attempted to join a player without a socket");
     this.setPlayer(player);
-    this.joinSocket(player.socket);
+    this.joinChannel(player.socket);
     this.channelExcept(player).emit("playerJoined", player.nickname);
     return player;
   }
@@ -87,12 +88,18 @@ export class Room {
   public reconnectPlayer(player: Player): void {
     if (!player.socket)
       throw new Error("Attempted to reconnect a player without a socket");
-    this.joinSocket(player.socket);
+    this.joinChannel(player.socket);
     this.channelExcept(player).emit("playerReconnected", player.nickname);
   }
 
+  public leavePlayer(player: Player): void {
+    this.players.delete(player.nickname);
+    if (player.socket) this.leaveChannel(player.socket);
+    this.channel.emit("playerLeft", player.nickname);
+  }
+
   public onPlayerDisconnect(player: Player): void {
-    this.channelExcept(player).emit("playerDisconnected", player.nickname);
+    this.channel.emit("playerDisconnected", player.nickname);
   }
   //endregion
 
@@ -105,13 +112,56 @@ export class Room {
   }
   //endregion
 
+  //region Playlist
   public changePlaylist(playlist: Playlist): void {
     this.playlist = playlist;
     this.channel.emit(
       "roomPlaylistChanged",
-      PlaylistDTO.fromPlaylist(playlist)
+      PlaylistDto.fromPlaylist(playlist)
     );
   }
+  //endregion
+
+  //region Game
+  public startGame() {
+    if (this.status !== RoomStatus.InLobby)
+      throw new SongQuizException(SongQuizExceptionCode.RoomIsNotInLobby);
+
+    if (!this.playlist)
+      throw new SongQuizException(SongQuizExceptionCode.RoomHasNoPlaylist);
+
+    this.status = RoomStatus.InGame;
+    this.currentRound = new Round(1, this);
+
+    this.channel.emit("gameStarting", config.delayBeforeStartingGameInMs);
+
+    this.currentRound.scheduleStart(config.delayBeforeStartingGameInMs);
+  }
+
+  public onRoundEnded(round: Round): void {
+    /**
+     * TODO: handle errors in methods called by setTimeout()
+     */
+    if (round !== this.currentRound)
+      throw new Error("Attempted to end a round that is not the current round");
+    if (round.number >= this.numberOfRounds) return this.endGame();
+
+    this.currentRound = new Round(round.number + 1, this);
+    this.currentRound.scheduleStart(config.intervalBetweenRoundsInMs);
+  }
+
+  private endGame() {
+    this.status = RoomStatus.Results;
+    this.currentRound = null;
+    this.playersList.forEach((player) => (player.score = 0));
+    this.channel.emit("gameEnded");
+  }
+
+  public backToLobby(): void {
+    this.status = RoomStatus.InLobby;
+    this.channel.emit("backToLobby");
+  }
+  //endregion
 
   //region Channel
   get channelName(): string {
@@ -121,6 +171,14 @@ export class Room {
   private channelExcept(player: Player): ChannelBroadcaster {
     if (!player.socket) return this.channel;
     return player.socket.to(this.channelName);
+  }
+
+  private joinChannel(socket: SocketType): void {
+    socket.join(this.channelName);
+  }
+
+  private leaveChannel(socket: SocketType): void {
+    socket.leave(this.channelName);
   }
   //endregion
 }

@@ -5,6 +5,8 @@ import { ServerType } from "@/typings/socket-io";
 import { registerHandlers } from "@/handlers";
 import signale from "signale";
 import { config } from "@/config";
+import { getRoom } from "@/services/rooms";
+import { RoomDto } from "@/dtos/room";
 
 export function createServer(
   port = config.port
@@ -21,6 +23,14 @@ export function createServer(
     io.on("connection", (socket) => registerHandlers(io, socket));
 
     io.attachApp(app);
+
+    app.get("/room/:roomCode", (res, req) => {
+      const room = getRoom(req.getParameter(0));
+      if (!room) return res.writeStatus("404").end();
+      res
+        .writeHeader("Content-Type", "application/json")
+        .end(JSON.stringify(RoomDto.fromRoom(room)));
+    });
 
     app.listen(port, (token) => {
       if (!token) return reject("Port is already in use");

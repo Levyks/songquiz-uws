@@ -11,8 +11,9 @@ export enum RoomRoundsType {
 }
 
 export enum RoundStatus {
-  Playing = "Playing",
-  Results = "Results",
+  Waiting = "Waiting",
+  InProgress = "InProgress",
+  Ended = "Ended",
 }
 
 export enum RoundType {

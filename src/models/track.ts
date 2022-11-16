@@ -3,7 +3,6 @@ import { SpotifyTrack } from "@/typings/spotify";
 
 export class Track {
   constructor(
-    public id: string,
     public name: string,
     public artists: Artist[],
     public cover: string,
@@ -13,7 +12,6 @@ export class Track {
 
   static fromSpotify(track: SpotifyTrack): Track {
     return new Track(
-      track.id,
       track.name,
       track.artists.map(Artist.fromSpotify),
       track.album.images[0].url,

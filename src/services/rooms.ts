@@ -26,6 +26,9 @@ export function createRoom(
 }
 
 export function generateRoomCode(length = 4, maxNumberOfTries = 1000000000) {
+  if (process.env.NODE_ENV === "test")
+    return rooms.size.toString().padStart(length, "0");
+
   const max = Math.pow(10, length);
   let tries = 0;
 

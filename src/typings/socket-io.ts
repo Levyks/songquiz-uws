@@ -4,14 +4,17 @@ import {
   ChangeRoomPlaylistFromSpotifyDto,
   ChangeRoomSettingsDto,
   CreateRoomDto,
+  GuessDto,
   JoinRoomDto,
 } from "@/dtos/client-to-server-events";
 import {
   RoomJoinedDto,
   RoomSettingsChangedDto,
+  RoundEndedDto,
 } from "@/dtos/server-to-client-events";
 import { Player } from "@/models/player";
-import { PlaylistDTO } from "@/dtos/playlist";
+import { PlaylistDto } from "@/dtos/playlist";
+import { RoundStartingDto } from "@/dtos/round";
 
 export type AckCallback<D> = (
   result: [true, D] | [false, SongQuizException]
@@ -23,16 +26,26 @@ export interface ServerToClientEvents {
   playerReconnected: (nickname: string) => void;
   playerLeft: (nickname: string) => void;
   roomSettingsChanged: (settings: RoomSettingsChangedDto) => void;
-  roomPlaylistChanged: (playlist: PlaylistDTO) => void;
+  roomPlaylistChanged: (playlist: PlaylistDto) => void;
+  gameStarting: (delayInMs: number) => void;
+  roundStarting: (data: RoundStartingDto) => void;
+  roundStarted: () => void;
+  roundEnded: (data: RoundEndedDto) => void;
+  gameEnded: () => void;
+  backToLobby: () => void;
 }
 
 export interface ClientToServerEvents {
   createRoom: (data: CreateRoomDto) => RoomJoinedDto;
   joinRoom: (data: JoinRoomDto) => RoomJoinedDto;
+  leaveRoom: () => void;
   changeRoomSettings: (data: ChangeRoomSettingsDto) => void;
   changeRoomPlaylistFromSpotify: (
     data: ChangeRoomPlaylistFromSpotifyDto
   ) => void;
+  startGame: () => void;
+  backToLobby: () => void;
+  guess: (data: GuessDto) => void;
 }
 
 export interface SocketData {

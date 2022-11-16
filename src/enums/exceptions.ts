@@ -8,4 +8,8 @@ export enum SongQuizExceptionCode {
   NicknameAlreadyTaken = "NicknameAlreadyTaken",
   LeaderOnlyAction = "LeaderOnlyAction",
   InRoomOnlyAction = "InRoomOnlyAction",
+  InRoundOnlyAction = "InRoundOnlyAction",
+  NotOpenForGuesses = "NotOpenForGuesses",
+  RoomIsNotInLobby = "RoomIsNotInLobby",
+  RoomHasNoPlaylist = "RoomHasNoPlaylist",
 }

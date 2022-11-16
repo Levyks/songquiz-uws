@@ -36,3 +36,10 @@ export class ChangeRoomPlaylistFromSpotifyDto {
   @Length(22)
   playlistId: string;
 }
+
+export class GuessDto {
+  @IsInt()
+  @Min(0)
+  @Max(config.numberOfRoundChoices - 1)
+  choice: number;
+}

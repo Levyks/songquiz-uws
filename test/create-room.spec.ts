@@ -6,6 +6,7 @@ import {
   createServerBeforeAndStopAfter,
   disconnectAllSocketsAfterEach,
 } from "./helpers/flow";
+import { config } from "@/config";
 
 describe("Create Room", () => {
   const sockets: SocketClientType[] = [];
@@ -38,9 +39,10 @@ describe("Create Room", () => {
         leader: nickname,
         status: RoomStatus.InLobby,
         roundsType: "Both",
-        numberOfRounds: 10,
-        secondsPerRound: 15,
+        numberOfRounds: config.defaultRoundsPerGame,
+        secondsPerRound: config.defaultSecondsPerRound,
         playlist: null,
+        currentRound: null,
       },
       token,
     });

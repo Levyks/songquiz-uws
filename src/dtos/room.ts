@@ -1,29 +1,33 @@
 import { RoomRoundsType, RoomStatus } from "@/enums/game";
-import { Room } from "@/models/room";
+import { Room, Player } from "@/models";
 import { PlayerDto } from "@/dtos/player";
+import { PlaylistDto } from "@/dtos/playlist";
+import { RoundDto } from "@/dtos/round";
 
 export class RoomDto {
-  code: string;
-  players: PlayerDto[];
-  leader: string;
-  status: RoomStatus;
-  roundsType: RoomRoundsType;
-  numberOfRounds: number;
-  secondsPerRound: number;
-  playlist: null;
+  constructor(
+    public code: string,
+    public players: PlayerDto[],
+    public leader: string,
+    public status: RoomStatus,
+    public roundsType: RoomRoundsType,
+    public numberOfRounds: number,
+    public secondsPerRound: number,
+    public playlist: PlaylistDto | null,
+    public currentRound: RoundDto | null = null
+  ) {}
 
-  static fromRoom(room: Room) {
-    const dto = new RoomDto();
-    dto.code = room.code;
-    dto.players = room.playersList.map((player) =>
-      PlayerDto.fromPlayer(player)
+  static fromRoom(room: Room, player?: Player) {
+    return new RoomDto(
+      room.code,
+      room.playersList.map((player) => PlayerDto.fromPlayer(player)),
+      room.leader.nickname,
+      room.status,
+      room.roundsType,
+      room.numberOfRounds,
+      room.secondsPerRound,
+      room.playlist ? PlaylistDto.fromPlaylist(room.playlist) : null,
+      room.currentRound ? RoundDto.fromRound(room.currentRound, player) : null
     );
-    dto.leader = room.leader.nickname;
-    dto.status = room.status;
-    dto.roundsType = room.roundsType;
-    dto.numberOfRounds = room.numberOfRounds;
-    dto.secondsPerRound = room.secondsPerRound;
-    dto.playlist = null;
-    return dto;
   }
 }

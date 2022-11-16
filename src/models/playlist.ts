@@ -20,10 +20,33 @@ export class Playlist {
     this.playableTracks = tracks.filter((track) => track.preview);
   }
 
-  public getRandomPlayableTracks(amount: number): TrackWithIndex[] {
+  /**
+   * This isn't the most efficient thing ever, but the playlists
+   * shouldn't get that big, so I guess it's fine.
+   *
+   * Note: this only avoids the repetition of the song's first artist
+   */
+  private getTracksToPickFromAvoidingArtistRepetition(
+    alreadyPickedTracks: TrackWithIndex[]
+  ): Track[] {
+    const artistsAlreadyPicked = alreadyPickedTracks.map(
+      (track) => track.track.artists[0].name
+    );
+    return this.playableTracks.filter(
+      (track) => !artistsAlreadyPicked.includes(track.artists[0].name)
+    );
+  }
+
+  public getRandomPlayableTracks(
+    amount: number,
+    avoidArtistRepetition = false
+  ): TrackWithIndex[] {
     const randomPlayableTracks: TrackWithIndex[] = [];
     while (randomPlayableTracks.length < amount) {
-      const [track, index] = randomElementWithIndex(this.playableTracks);
+      const tracksToPickFrom = avoidArtistRepetition
+        ? this.getTracksToPickFromAvoidingArtistRepetition(randomPlayableTracks)
+        : this.playableTracks;
+      const [track, index] = randomElementWithIndex(tracksToPickFrom);
       randomPlayableTracks.push({ track, index });
     }
     return randomPlayableTracks;

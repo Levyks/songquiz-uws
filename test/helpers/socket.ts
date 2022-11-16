@@ -47,7 +47,9 @@ export function listenTo<
     socket.on.call(socket, event, listener);
 
     const timeoutId = setTimeout(() => {
-      reject(new Error(`Timeout of ${timeout}ms exceeded`));
+      reject(
+        new Error(`Timeout of ${timeout}ms exceeded for event "${event}"`)
+      );
       clear();
     }, timeout);
 

@@ -13,3 +13,7 @@ export function randomElementWithIndex<T>(array: T[]): [T, number] {
 export function randomElement<T>(array: T[]): T {
   return randomElementWithIndex(array)[0];
 }
+
+export function randomNumber(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1) + min);
+}

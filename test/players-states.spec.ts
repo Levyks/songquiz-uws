@@ -79,4 +79,23 @@ describe("Players states", () => {
 
     expect(await playerReconnectedListener).to.be.deep.equal([playerNickname]);
   });
+
+  it("other players should be notified when a player leaves", async () => {
+    const { roomCode, socket: leaderSocket } = await createPlayerAndCreateRoom(
+      sockets
+    );
+
+    const playerNickname = "player";
+    const { socket: playerSocket } = await createPlayerAndJoinRoom(
+      sockets,
+      roomCode,
+      playerNickname
+    );
+
+    const playerLeftListener = listenTo(leaderSocket, "playerLeft");
+
+    await emit(playerSocket, "leaveRoom");
+
+    expect(await playerLeftListener).to.be.deep.equal([playerNickname]);
+  });
 });

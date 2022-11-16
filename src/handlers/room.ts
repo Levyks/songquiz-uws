@@ -10,9 +10,10 @@ import { RoomDto } from "@/dtos/room";
 import { SongQuizException } from "@/exceptions";
 import { SongQuizExceptionCode } from "@/enums/exceptions";
 import { HandlerDefinition, HandlerThis } from "@/typings/handlers";
-import { getRoomFromSocket } from "@/helpers/socket";
+import { getPlayerFromSocket, getRoomFromSocket } from "@/helpers/socket";
 import { isLeader } from "@/middleware/room";
 import { fetchPlaylist as fetchSpotifyPlaylist } from "@/services/spotify";
+import signale from "signale";
 
 async function onCreateRoom(
   this: HandlerThis,
@@ -20,9 +21,13 @@ async function onCreateRoom(
 ): Promise<RoomJoinedDto> {
   const room = createRoom(this.io, data.nickname, this.socket);
 
-  return new RoomJoinedDto(RoomDto.fromRoom(room), await room.leader.token);
+  return new RoomJoinedDto(
+    RoomDto.fromRoom(room, room.leader),
+    await room.leader.token
+  );
 }
 
+// TODO: implement player limit
 async function onJoinRoom(
   this: HandlerThis,
   data: JoinRoomDto
@@ -37,7 +42,20 @@ async function onJoinRoom(
     this.socket
   );
 
-  return new RoomJoinedDto(RoomDto.fromRoom(room), await player.token);
+  return new RoomJoinedDto(RoomDto.fromRoom(room, player), await player.token);
+}
+
+function onLeaveRoom(this: HandlerThis): void {
+  const player = getPlayerFromSocket(this.socket);
+  const room = getRoomFromSocket(this.socket);
+  room.leavePlayer(player);
+
+  // TODO: Are players being garbage collected after leaving? They should!!
+  new FinalizationRegistry((nickname) => {
+    signale.warn(`Player is being garbage collected: ${nickname}`);
+  }).register(player, player.nickname);
+
+  this.socket.data.player = undefined;
 }
 
 function onChangeRoomSettings(
@@ -57,6 +75,16 @@ async function onChangeRoomPlaylistFromSpotify(
   room.changePlaylist(playlist);
 }
 
+function onStartGame(this: HandlerThis): void {
+  const room = getRoomFromSocket(this.socket);
+  room.startGame();
+}
+
+function onBackToLobby(this: HandlerThis): void {
+  const room = getRoomFromSocket(this.socket);
+  room.backToLobby();
+}
+
 export const roomHandlers: HandlerDefinition[] = [
   {
     event: "createRoom",
@@ -69,6 +97,11 @@ export const roomHandlers: HandlerDefinition[] = [
     constructors: [JoinRoomDto],
   },
   {
+    event: "leaveRoom",
+    handler: onLeaveRoom,
+    constructors: [],
+  },
+  {
     event: "changeRoomSettings",
     handler: onChangeRoomSettings,
     constructors: [ChangeRoomSettingsDto],
@@ -78,6 +111,18 @@ export const roomHandlers: HandlerDefinition[] = [
     event: "changeRoomPlaylistFromSpotify",
     handler: onChangeRoomPlaylistFromSpotify,
     constructors: [ChangeRoomPlaylistFromSpotifyDto],
+    middleware: [isLeader],
+  },
+  {
+    event: "startGame",
+    handler: onStartGame,
+    constructors: [],
+    middleware: [isLeader],
+  },
+  {
+    event: "backToLobby",
+    handler: onBackToLobby,
+    constructors: [],
     middleware: [isLeader],
   },
 ];

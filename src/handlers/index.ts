@@ -14,6 +14,7 @@ import { SongQuizExceptionCode } from "@/enums/exceptions";
 import { ArgValidationError } from "@/typings/validation";
 import { HandlerThis, Middleware } from "@/typings/handlers";
 import { registerMiscHandlers } from "@/handlers/misc";
+import { roundHandlers } from "@/handlers/round";
 
 function validateArgsCount(args: any[], count: number) {
   if (args.length !== count)
@@ -96,7 +97,7 @@ export function registerHandler<
 }
 
 export function registerHandlers(io: ServerType, socket: SocketType) {
-  const handlers = [...roomHandlers];
+  const handlers = [...roomHandlers, ...roundHandlers];
 
   registerMiscHandlers(socket);
   for (const handler of handlers) {
